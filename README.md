@@ -1,12 +1,12 @@
 # nestjs-agenda
 Distributed lock with single redis instance, simple and easy to use for [Nestjs](https://github.com/nestjs/nest)
 
-# Installation
+## Installation
 ```
 npm install nestjs-simple-redis-lock
 ```
 
-# Usage
+## Usage
 You must install [nestjs-redis](https://github.com/kyknow/nestjs-redis), and use in Nest:
 ```JavaScript
 // app.ts
@@ -31,7 +31,7 @@ import { RedisModule } from 'nestjs-redis';
 })
 export class AppModule {}
 ```
-## 1. Example
+### 1. Example
 ```TypeScript
 import { RedisLockService } from 'nestjs-simple-redis-lock';
 
@@ -67,7 +67,7 @@ export class FooService {
 }
 ```
 
-## 2. Example by using decorator
+### 2. Example by using decorator
 ```TypeScript
 import { RedisLockService, RedisLock } from 'nestjs-simple-redis-lock';
 
@@ -97,7 +97,7 @@ export class FooService {
 }
 ```
 
-# DEBUG
+## Debug
 Add a environment variable `DEBUG=nestjs-simple-redis-lock` when start application to check log:
 ```json
 // package.json
