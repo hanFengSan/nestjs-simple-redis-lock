@@ -1,4 +1,4 @@
-# nestjs-agenda
+# nestjs-simple-redis-lock
 Distributed lock with single redis instance, simple and easy to use for [Nestjs](https://github.com/nestjs/nest)
 
 ## Installation
