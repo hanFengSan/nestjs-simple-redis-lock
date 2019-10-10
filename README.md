@@ -7,7 +7,7 @@ npm install nestjs-simple-redis-lock
 ```
 
 ## Usage
-You must install [nestjs-redis](https://github.com/kyknow/nestjs-redis), and use in Nest:
+You must install [nestjs-redis](https://github.com/kyknow/nestjs-redis), and use in Nest. This package use it to access redis:
 ```JavaScript
 // app.ts
 import { RedisModule } from 'nestjs-redis';
@@ -31,7 +31,7 @@ import { RedisModule } from 'nestjs-redis';
 })
 export class AppModule {}
 ```
-### 1. Example
+### 1. Simple example
 ```TypeScript
 import { RedisLockService } from 'nestjs-simple-redis-lock';
 
@@ -41,16 +41,19 @@ export class FooService {
   ) {}
 
   async test1() {
-    /**
-     * Get a lock by name
-     * Automatically unlock after 1min
-     * Try again after 100ms
-     * The max times to retry is 36000, about 1h
-     */
-    await this.lockService.lock('test1');
-    // Do somethings
-    this.lockService.unlock('test1'); // unlock a lock
-    // Or: await this.lockService.unlock('test1'); wait for the unlocking
+    try {
+      /**
+       * Get a lock by name
+       * Automatically unlock after 1min
+       * Try again after 100ms
+       * The max times to retry is 36000, about 1h
+       */
+      await this.lockService.lock('test1');
+      // Do somethings
+    } finally { // use 'finally' to ensure unlocking
+      this.lockService.unlock('test1'); // unlock
+      // Or: await this.lockService.unlock('test1'); wait for the unlocking
+    }
   }
   
   async test2() {
@@ -68,6 +71,8 @@ export class FooService {
 ```
 
 ### 2. Example by using decorator
+Using `nestjs-simple-redis-lock` by decorator, the locking and unlocking will be very easy.
+Simple example with constant lock name:
 ```TypeScript
 import { RedisLockService, RedisLock } from 'nestjs-simple-redis-lock';
 
@@ -76,8 +81,11 @@ export class FooService {
     protected readonly lockService: RedisLockService, // inject RedisLockService 
   ) {}
 
-  // Wrap the method, starting with getting a lock, ending with unlocking
-  @RedisLock('test2')
+  /**
+   * Wrap the method, starting with getting a lock, ending with unlocking
+   * The first parameter must be a function that return a lock name
+   */
+  @RedisLock(() => 'test2')
   async test1() {
     // Do somethings
     return 'some values';
@@ -89,8 +97,42 @@ export class FooService {
    * Try again after 50ms if failed
    * The max times to retry is 100
    */ 
-  @RedisLock('test2', 2 * 60 * 1000, 50, 100)
+  @RedisLock(() => 'test2', 2 * 60 * 1000, 50, 100)
   async test2() {
+    // Do somethings
+    return 'some values';
+  }
+}
+```
+
+The first parameter of this decorator is a powerful function. It can use to determinate lock name by many ways. 
+Simple example with dynamic lock name:
+```TypeScript
+import { RedisLockService, RedisLock } from 'nestjs-simple-redis-lock';
+
+export class FooService {
+  lockName = 'test3';
+
+  constructor(
+    protected readonly lockService: RedisLockService, // inject RedisLockService 
+  ) {}
+
+  /**
+   * Determinate lock name from 'this'
+   * The first parameter is 'this', so you can access any member in 'this' for create a dynamic lock name.
+   */
+  @RedisLock((target) => target.lockName)
+  async test1() {
+    // Do somethings
+    return 'some values';
+  }
+
+  /**
+   * Determinate lock name from the parameters of the method
+   * The original parameters also pass to the function, so you can determinate the lock name by the parameters.
+   */
+  @RedisLock((target, param1, param2) => param1 + param2)
+  async test2(param1, param2) {
     // Do somethings
     return 'some values';
   }
