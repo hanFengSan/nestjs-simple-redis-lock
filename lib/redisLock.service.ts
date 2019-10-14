@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { RedisService } from 'nestjs-redis';
 import * as debugFactory from 'debug';
+import { REDIS_LOCK_OPTIONS } from './redisLock.constants';
+import IORedis = require('ioredis');
+import { RedisLockOptions } from './interfaces/redisLockOptions.interface';
 
 const debug = debugFactory('nestjs-simple-redis-lock');
 debug('booting %o', 'nestjs-simple-redis-lock');
@@ -11,12 +14,23 @@ export class RedisLockService {
 
   constructor(
     protected readonly redis: RedisService,
+    @Inject(REDIS_LOCK_OPTIONS) protected readonly config: RedisLockOptions,
   ) {
-    console.log(`RedisLock: uuid: ${this.uuid}`);
+    debug(`RedisLock: uuid: ${this.uuid}`);
   }
 
   private prefix(name): string {
+    if (this.config.prefix) {
+      return this.config.prefix + name;
+    }
     return `lock:${name}`;
+  }
+
+  private getClient(): IORedis.Redis {
+    if (this.config.clientName) {
+      return this.redis.getClient(this.config.clientName);
+    }
+    return this.redis.getClient();
   }
 
   /**
@@ -38,7 +52,7 @@ export class RedisLockService {
    * @returns {boolean} true: success, false: failed
    */
   public async lockOnce(name, expire) {
-    const client = this.redis.getClient();
+    const client = this.getClient();
     const result = await client.set(this.prefix(name), this.uuid, 'PX', expire, 'NX');
     debug(`lock: ${name}, result: ${result}`);
     return result !== null;
@@ -70,7 +84,7 @@ export class RedisLockService {
    * @param {string} name lock name
    */
   public async unlock(name) {
-    const client = this.redis.getClient();
+    const client = this.getClient();
     const result = await client.eval(
       "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
       1,
@@ -86,7 +100,7 @@ export class RedisLockService {
    * @param {number} milliseconds TTL
    */
   public async setTTL(name, milliseconds) {
-    const client = this.redis.getClient();
+    const client = this.getClient();
     const result = await client.pexpire(this.prefix(name), milliseconds);
     debug(`set TTL: ${name}, result: ${result}`);
   }

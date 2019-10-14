@@ -10,7 +10,7 @@ interface GetLockNameFunc {
  * @param {number} [retryInterval]  milliseconds, the interval to retry
  * @param {number} [maxRetryTimes]  max times to retry
  */
-export function RedisLock(getLockName: GetLockNameFunc, expire?: number, retryInterval?: number, maxRetryTimes?: number) {
+export function RedisLock(lockName: String | GetLockNameFunc, expire?: number, retryInterval?: number, maxRetryTimes?: number) {
   return function (target, key, descriptor) {
     const value = descriptor.value;
     const getLockService = (that): RedisLockService => {
@@ -28,7 +28,12 @@ export function RedisLock(getLockName: GetLockNameFunc, expire?: number, retryIn
     }
     descriptor.value = async function (...args) {
       const lockService = getLockService(this);
-      const name = getLockName(this, ...args);
+      let name: string;
+      if (typeof lockName === 'string') {
+        name = lockName;
+      } else if (typeof lockName === 'function') {
+        name = lockName(this, ...args);
+      }
       try {
         await lockService.lock(name, expire, retryInterval, maxRetryTimes);
         return await value.call(this, ...args);

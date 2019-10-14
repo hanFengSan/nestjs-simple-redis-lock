@@ -26,7 +26,7 @@ import { RedisModule } from 'nestjs-redis';
       }),
       inject: [ConfigService],
     }),
-    RedisLockModule, // import RedisLockModule
+    RedisLockModule.register({}), // import RedisLockModule, use default configuration
   ]
 })
 export class AppModule {}
@@ -83,21 +83,23 @@ export class FooService {
 
   /**
    * Wrap the method, starting with getting a lock, ending with unlocking
-   * The first parameter must be a function that return a lock name
+   * The first parameter is lock name
+   * By default, automatically unlock after 1min.
+   * By default, try again after 100ms if failed
+   * By default, the max times to retry is 36000, about 1h
    */
-  @RedisLock(() => 'test2')
+  @RedisLock('test2')
   async test1() {
     // Do somethings
     return 'some values';
   }
 
   /**
-   * Wrap the method, starting with getting a lock, ending with unlocking
    * Automatically unlock after 2min
    * Try again after 50ms if failed
    * The max times to retry is 100
    */ 
-  @RedisLock(() => 'test2', 2 * 60 * 1000, 50, 100)
+  @RedisLock('test2', 2 * 60 * 1000, 50, 100)
   async test2() {
     // Do somethings
     return 'some values';
@@ -137,6 +139,33 @@ export class FooService {
     return 'some values';
   }
 }
+```
+
+## Configuration
+* Register:*
+```TypeScript
+@Module({
+  imports: [
+    RedisLockModule.register({
+      clientName: 'client_name', // the Redis client name in nestjs-redis, to use specific Redis client. Default to use default client
+      prefix: 'my_lock:', // By default, the prefix is 'lock:'
+    })
+  ]
+})
+```
+*Async register:*
+```TypeScript
+@Module({
+  imports: [
+    RedisLockModule.registerAsync({
+          imports: [ConfigModule],
+          useFactory: async (config: ConfigService) => ({
+            clientName: config.get('REDIS_LOCK_CLIENT_NAME')
+          }),
+          inject: [ConfigService],
+        }),
+  ]
+})
 ```
 
 ## Debug
