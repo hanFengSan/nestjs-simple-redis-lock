@@ -11,6 +11,7 @@ You must install [nestjs-redis](https://github.com/kyknow/nestjs-redis), and use
 ```JavaScript
 // app.ts
 import { RedisModule } from 'nestjs-redis';
+import { RedisLockModule } from 'nestjs-simple-redis-lock';
 
 @Module({
   imports: [
