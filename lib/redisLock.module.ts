@@ -1,11 +1,11 @@
 import { Module, DynamicModule, Provider } from '@nestjs/common';
 import { RedisLockService } from './redisLock.service';
-import { RedisModule } from 'nestjs-redis';
+import { RedisModule } from '@liaoliaots/nestjs-redis';
 import { RedisLockOptions, RedisLockAsyncOptions, RedisLockOptionsFactory } from './interfaces/redisLockOptions.interface';
 import { REDIS_LOCK_OPTIONS } from './redisLock.constants';
 
 function createRedisLockProvider(options: RedisLockOptions): any[] {
-  return [ { provide: REDIS_LOCK_OPTIONS, useValue: options || {} }];
+  return [{ provide: REDIS_LOCK_OPTIONS, useValue: options || {} }];
 }
 
 @Module({

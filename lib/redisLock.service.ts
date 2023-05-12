@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { RedisService } from 'nestjs-redis';
+import { RedisService } from '@liaoliaots/nestjs-redis';
 import * as debugFactory from 'debug';
 import { REDIS_LOCK_OPTIONS } from './redisLock.constants';
 import IORedis = require('ioredis');
@@ -14,7 +14,7 @@ export class RedisLockService {
 
   constructor(
     protected readonly redis: RedisService,
-    @Inject(REDIS_LOCK_OPTIONS) protected readonly config: RedisLockOptions,
+    @Inject(REDIS_LOCK_OPTIONS) protected readonly config: RedisLockOptions
   ) {
     debug(`RedisLock: uuid: ${this.uuid}`);
   }
@@ -34,26 +34,35 @@ export class RedisLockService {
   }
 
   /**
-   * Generate a uuid for identify each distributed node 
+   * Generate a uuid for identify each distributed node
    */
   private static generateUuid(): string {
     let d = Date.now();
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c: String) => {
-      const r = (d + Math.random() * 16) % 16 | 0;
-      d = Math.floor(d / 16);
-      return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
-    });
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+      /[xy]/g,
+      (c: String) => {
+        const r = (d + Math.random() * 16) % 16 | 0;
+        d = Math.floor(d / 16);
+        return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+      }
+    );
   }
 
   /**
    * Try to lock once
-   * @param {string} name lock name 
+   * @param {string} name lock name
    * @param {number} [expire] milliseconds, TTL for the redis key
    * @returns {boolean} true: success, false: failed
    */
   public async lockOnce(name, expire) {
     const client = this.getClient();
-    const result = await client.set(this.prefix(name), this.uuid, 'PX', expire, 'NX');
+    const result = await client.set(
+      this.prefix(name),
+      this.uuid,
+      'PX',
+      expire,
+      'NX'
+    );
     debug(`lock: ${name}, result: ${result}`);
     return result !== null;
   }
@@ -64,7 +73,12 @@ export class RedisLockService {
    * @param {number} [retryInterval] milliseconds, the interval to retry if failed
    * @param {number} [maxRetryTimes] max times to retry
    */
-  public async lock(name: string, expire: number = 60000, retryInterval: number = 100, maxRetryTimes: number = 36000): Promise<void> {
+  public async lock(
+    name: string,
+    expire: number = 60000,
+    retryInterval: number = 100,
+    maxRetryTimes: number = 36000
+  ): Promise<void> {
     let retryTimes = 0;
     while (true) {
       if (await this.lockOnce(name, expire)) {
@@ -89,14 +103,14 @@ export class RedisLockService {
       "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
       1,
       this.prefix(name),
-      this.uuid,
+      this.uuid
     );
     debug(`unlock: ${name}, result: ${result}`);
   }
 
   /**
    * Set TTL for a lock
-   * @param {string} name lock name 
+   * @param {string} name lock name
    * @param {number} milliseconds TTL
    */
   public async setTTL(name, milliseconds) {
@@ -109,6 +123,6 @@ export class RedisLockService {
    * @param {number} ms milliseconds, the sleep interval
    */
   public sleep(ms: Number): Promise<Function> {
-    return new Promise(resolve => setTimeout(resolve, Number(ms)));
+    return new Promise((resolve) => setTimeout(resolve, Number(ms)));
   }
 }
