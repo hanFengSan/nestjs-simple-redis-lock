@@ -1,6 +1,6 @@
 {
   "name": "nestjs-simple-redis-lock",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Distributed lock with single redis instance, simple and easy to use for Nestjs",
   "main": "index.js",
   "scripts": {
