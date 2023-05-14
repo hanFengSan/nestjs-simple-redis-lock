@@ -47,7 +47,7 @@ export class FooService {
        * Get a lock by name
        * Automatically unlock after 1min
        * Try again after 100ms
-       * The max times to retry is 36000, about 1h
+       * The max times to retry is 600, about 1min
        */
       await this.lockService.lock('test1');
       // Do somethings
@@ -87,7 +87,7 @@ export class FooService {
    * The first parameter is lock name
    * By default, automatically unlock after 1min.
    * By default, try again after 100ms if failed
-   * By default, the max times to retry is 36000, about 1h
+   * By default, the max times to retry is 600, about 1min
    */
   @RedisLock('test2')
   async test1() {
