@@ -70,6 +70,7 @@ export class RedisLockService {
   /**
    * Get a lock, automatically retrying if failed
    * @param {string} name lock name
+   * @param {string} [expire] expire time
    * @param {number} [retryInterval] milliseconds, the interval to retry if failed
    * @param {number} [maxRetryTimes] max times to retry
    */
@@ -77,7 +78,7 @@ export class RedisLockService {
     name: string,
     expire: number = 60000,
     retryInterval: number = 100,
-    maxRetryTimes: number = 36000
+    maxRetryTimes: number = 600
   ): Promise<void> {
     let retryTimes = 0;
     while (true) {
